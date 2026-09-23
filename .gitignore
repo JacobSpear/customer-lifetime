@@ -1,0 +1,11 @@
+_pycache_/
+*.pyc
+*.egg-info/
+dist/
+build/
+*.db
+models/
+.env
+.venv/
+.vscode/
+plan.md
