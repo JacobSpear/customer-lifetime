@@ -1,0 +1,87 @@
+\documentclass[11pt]{article}
+
+% ─── Page geometry ───────────────────────────────────────────────
+\usepackage[margin=1in]{geometry}
+
+% ─── Math ────────────────────────────────────────────────────────
+\usepackage{amsmath, amssymb, amsthm, mathtools}
+
+% ─── Theorem environments ───────────────────────────────────────
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+% ─── Fonts & encoding ───────────────────────────────────────────
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}            % clean Computer Modern successor
+\usepackage{microtype}          % subtle kerning/protrusion improvements
+
+% ─── Graphics & figures ─────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{float}
+
+% ─── Tables ──────────────────────────────────────────────────────
+\usepackage{booktabs}           % \toprule, \midrule, \bottomrule
+
+% ─── Colors & links ─────────────────────────────────────────────
+\usepackage[dvipsnames]{xcolor}
+\usepackage[colorlinks=true,
+            linkcolor=NavyBlue,
+            citecolor=OliveGreen,
+            urlcolor=BrickRed]{hyperref}
+
+% ─── Bibliography ────────────────────────────────────────────────
+\usepackage[numbers,sort&compress]{natbib}
+
+% ─── Convenience macros ─────────────────────────────────────────
+\DeclareMathOperator{\E}{\mathbb{E}}
+\DeclareMathOperator{\Var}{Var}
+\DeclareMathOperator{\Cov}{Cov}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\ind}{\mathbf{1}}           % indicator function
+\newcommand{\iid}{\overset{\mathrm{iid}}{\sim}}
+\newcommand{\convp}{\xrightarrow{p}}
+\newcommand{\convd}{\xrightarrow{d}}
+
+% ─── Probability ─────────────────────────────────────────────────
+\DeclareMathOperator{\Prob}{\mathbb{P}}
+\newcommand{\Beta}{\operatorname{Beta}}
+\newcommand{\Weibull}{\operatorname{Weibull}}
+\newcommand{\Binom}{\operatorname{Binomial}}
+\newcommand{\Unif}{\operatorname{Uniform}}
+
+% ─── Survival analysis notation ─────────────────────────────────
+\newcommand{\Shat}{\hat{S}}            % KM estimator
+\newcommand{\Sinf}{\hat{S}_{\infty}}   % KM plateau
+
+% ─── Document info ──────────────────────────────────────────────
+\title{On the Kaplan--Meier Plateau in Recurrent Gap-Time Data}
+\author{Jacob Spear}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We show that the Kaplan--Meier estimator applied to inter-visit
+gap times converges to $1/\bar{v}$, where $\bar{v}$ is the mean
+number of visits per customer, regardless of the underlying churn
+dynamics. This makes it unsuitable for estimating cure fractions
+in recurrent-event settings.
+\end{abstract}
+
+\section{Introduction}
+
+% Your content here.
+
+\bibliographystyle{plainnat}
+% \bibliography{refs}   % uncomment when you have a refs.bib
+
+\end{document}
