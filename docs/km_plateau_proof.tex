@@ -10,6 +10,7 @@
 \newtheorem{theorem}{Theorem}
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{fact}[theorem]{Fact}
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
@@ -17,15 +18,15 @@
 
 % ─── Fonts & encoding ───────────────────────────────────────────
 \usepackage[T1]{fontenc}
-\usepackage{lmodern}            % clean Computer Modern successor
-\usepackage{microtype}          % subtle kerning/protrusion improvements
+\usepackage{lmodern}           
+\usepackage{microtype}          
 
 % ─── Graphics & figures ─────────────────────────────────────────
 \usepackage{graphicx}
 \usepackage{float}
 
 % ─── Tables ──────────────────────────────────────────────────────
-\usepackage{booktabs}           % \toprule, \midrule, \bottomrule
+\usepackage{booktabs}          
 
 % ─── Colors & links ─────────────────────────────────────────────
 \usepackage[dvipsnames]{xcolor}
@@ -57,12 +58,8 @@
 \newcommand{\Binom}{\operatorname{Binomial}}
 \newcommand{\Unif}{\operatorname{Uniform}}
 
-% ─── Survival analysis notation ─────────────────────────────────
-\newcommand{\Shat}{\hat{S}}            % KM estimator
-\newcommand{\Sinf}{\hat{S}_{\infty}}   % KM plateau
-
 % ─── Document info ──────────────────────────────────────────────
-\title{On the Kaplan--Meier Plateau in Recurrent Gap-Time Data}
+\title{End-behavior of a Kaplan-Meier Estimator for Repeated Events}
 \author{Jacob Spear}
 \date{\today}
 
@@ -70,18 +67,255 @@
 \maketitle
 
 \begin{abstract}
-We show that the Kaplan--Meier estimator applied to inter-visit
-gap times converges to $1/\bar{v}$, where $\bar{v}$ is the mean
-number of visits per customer, regardless of the underlying churn
-dynamics. This makes it unsuitable for estimating cure fractions
-in recurrent-event settings.
+Assuming a mixture cure model of customer return, we show that the Kaplan-Meier estimator applied to inter-visit
+gap times converges to the proportion of censored visits, regardless of the underlying rates of attrition.
 \end{abstract}
 
 \section{Introduction}
 
-% Your content here.
+We want to model the following scenario.  A restaurant tracks its customers' patterns of repeated visits.
+Data collection begins on day $d=1$.  On each day between day $1$ and day $x$, the final day of data collection,
+some constant number, $k$, of new customers discover the restaurant and make their first visit.  Thus, on day $x$,
+$kx$ customers in total have visited the restaurant.  To determine time to return, we will make independent and 
+identically distributed draws from some probability distribution on the \textbf{positive} integers with finite moments
+(although we will only need finite fourth moment).  It will be convenient for the number of these draws to be deterministic, depending only on $x$ and not on the results
+of these draws.  For each customer $i$, we make one draw $T_{ij}$ for each positive integer $j$, representing the time 
+to return \textit{if the customer visits on day $j$}.  
 
+Note that if customer $1$ has $T_{1,1}=3$, then their next visit will be on day $4$, and so $T_{1,2}$ and $T_{1,3}$
+have no influence on their behavior at all.  
+
+Customer $i$ visits the restaurant for the first time on day $d_i$.  For each customer, we randomly select 
+a day of attrition $D_i$, on the interval $\left[d_i,\infty\right)$ such that the CDF $f_D$ of the distribution from which 
+the $D_i$ are drawn satisfies:
+$y_1>y_2 \implies f_{D}(y_1|T_{ij}) \leq f_{D}(y_2|T_{ij})$.
+We do not assume that the $D_i$ are independent of the $T_{ij}$.  
+
+The above model approximates a \textit{mixture cure} model, since the ``cured'' population (who will never return to the restaurant)
+are modeled separately from the \textit{at-risk} population who may still return. 
+
+\section{The KM Estimator}
+
+The Kaplan-Meier estimator is the standard approach in oncology (and other medical disciplines) to estimating the time
+to some event (often called \textit{survival time}) in the presence of censored data.  The inputs to the estimator are times
+$T_i$ and event/censoring indicators $\delta_i$.  The standard approach assumes one row per subject, with
+the $\delta_i$ indicating whether the event has occurred ($\delta_i=1$) or not ($\delta_i=0$) for each subject.  Typically
+the estimator is written as a product of the proportion of subjects \textit{at risk} at a given time who \textit{survive}, or 
+do not have the event.  However, we can factor these terms as ratios $\frac{m-1}{m}$ by treating each event time 
+as infinitesimally distinct.  Suppose we have $n$ records.  Ordering the $T_i$ in increasing order, 
+
+\[S(t)=\prod_{\{i:T_i\le t\}} \left(\frac{n-(i+1)}{n-i}\right)^{\delta_i}.\]
+
+Suppose we take a snapshot of our data on day $d$.  Keep in mind, the restaurant wouldn't be able to observe
+each of the $T_{ij}$ - they would only observe the visits that actually occurred.
+
+For each customer, let $c_i$ be the time from their last visit to day $d$ - the censoring time.  Note that
+$c_i$ is a function of $x$, of the $T_{ij}$, and of the $D_i$.  If the customer discontinued at time $D_i$,
+their $c_i$ would be the time from their last visit before time $D_i$. 
+
+On day $x$, we wish to estimate time-to-return.  One plausible approach is to use the Kaplan-Meier
+estimator and to treat each visit as a separate observation.  The final visits for each customer are the censored
+visits, and we have no deterministic way to distinguish among these censored visits which are due to true attrition
+and which correspond to a customer who will return but hasn't yet.
+
+For each visit, all we know is the time to the next visit (if it occurred), and the censoring time if it 
+did not.  We also know whether each visit is censored.  Each non-censored visit time is one of the $T_{ij}$,
+and the $c_i$ are drawn from some distribution on $\left[d_i,x\right)$ which depends on the $T_{ij}$.  
+
+To simplify the analysis, we assume that we have chosen the distribution of the $D_i$ so that the $c_i$
+are asymptotically uniform on $\left[0,x\right]$.
+
+We re-index the non-censored visits in order of non-decreasing length as $\widehat(T)_\ell$
+and we re-index the censoring time $\widehat{c}_i$ similarly. 
+
+We interleave the $\widehat(T)_\ell$ and $\widehat{c}_i$ with the standard convention that, in the case of ties,
+$\widehat{c}$ (the censored time) occurs after $\widehat(T)$ (the event time).
+
+Call these times $\tau_i$ and let $\delta_i=1$ if $\tau_i$ corresponds to an event $\widehat{T}_\ell$ 
+or a censoring time $\widehat{c}$.  We are finally ready to write down the formula for the KM estimator.
+Recall that $kx$ is the total number of customers.  Let $V_x$ be the total number of visits 
+which have occurred by time $x$.  Note that $V_x$ is bounded above by $kx^2$.  Then
+
+
+\[S_x(t) = \prod_{\left\{i : \tau_i = t\right\}}{\left(\frac{V_x-(i+1)}{V_x-i}\right)^{\delta_i}}.\]
+
+Really, we are only interested in the final value $S_x(x)$, which we abbreviate as $S_x$:
+
+\[S_x = \prod_{i=1}^{V_x} \left(\frac{V_x-(i+1)}{V_x-i}\right)^{\delta_i}.\]
+
+Our main result is:
+
+\begin{theorem}
+    With $\widehat{c}_i$ uniformly distributed in $\left[0,x\right]$, $\widehat{T}_{\ell}$ i.i.d. as above,
+    and $\tau_i$ defined as above, let $V_x=V_e + V_c$, where $V_e$ is the number of $\widehat{T}_{\ell}$ and $V_c$
+    the number of $\widehat{c}_i$.  Then, with probability $1$,
+\[\lim_{x\rightarrow \infty} S_x \cdot \frac{V_x}{V_c} =1.\]
+\end{theorem}
+
+\section{Bounds for the asymptote of the KM estimator}
+
+Note that $S_x \le \frac{V_c}{V_x}$, because if all events occur before all censored records, the estimator simply becomes:
+
+\[\frac{V_x-1}{V_x} \cdot \frac{V_x-2}{V_x-1}\dots \frac{V_x-V_e}{V_x-V_e+1} = \frac{V_c}{V_x}.\]
+
+and that any other value of $S_x$ would replace some of the terms of this product with smaller values.
+
+Thus, we wish to find a lower bound for $S_x$ with probability $1$ and which converges
+to $\frac{V_c}{V_x}$ in the limit (i.e., the quotient of the two converges to $1$ in the limit).  
+Note that by our assumptions of how the customers originate ($k$ per day), we have
+$V_c=kx$ and we have $V_x < kx^2$.
+
+We will argue that relatively few of the censored times occur before the final uncensored time.  
+Let $b_x$ be the number of such censored times.
+
+We will construct a function $\varphi(x)$ such that $b_x < \varphi(x)$ with probability $1$ and such that
+$\varphi(x)/x$ approaches $0$ in the limit.  Assuming that $\varphi$ exists, we can prove the theorem:
+
+\begin{proof}
+    As above,
+    \[S_x = \prod_{i=1}^{V_x} \left(\frac{V_x-(i+1)}{V_x-i}\right)^{\delta_i}.\]
+    we imagine rearranging the $\delta_i$ so that the first $b_x$ terms are $1$.  This replaces some
+    terms of the product with smaller values.  Therefore,
+    \[S_x \ge \frac{V_x-b_x-1}{V_x-b_x}\dots \frac{V_x-V_e-b_x-1}{V_x-V_e-b_x} = \frac{V_c-b_x-1}{V_x-b_x}.\]
+
+    Therefore:
+
+    \begin{align}
+        \lim_{x\rightarrow \infty}S_x\frac{V_c}{V_x} &\leq \lim_{x\rightarrow \infty} \frac{V_c-b_x-1}{V_x-b_x} \cdot \frac{V_c}{V_x} \\
+        &\leq \lim_{x\rightarrow \infty}\frac{V_c-b_x-1}{V_c} \\
+        &\leq \lim_{x\rightarrow \infty}\frac{V_c-\varphi(x)-1}{V_c} \\
+        &= \lim_{x\rightarrow \infty}\frac{kx-\varphi(x)-1}{kx} \\
+        &= \lim_{x\rightarrow \infty} 1 - \frac{-\varphi(x)}{kx} = 1
+    \end{align}
+    as desired. \qed
+\end{proof}
+
+Thus, all that remains is to choose an appropriate $\varphi(x)$.  For the above proof to hold, we need
+$\varphi(x) < o(x)$.  To get $b_x < \varphi(x)$ with probability $1$, we will need $\varphi(x) > o(\sqrt{x})$. 
+Any such function will do.  It remains to show that this lower bound on $\varphi(x)$ is sufficient to get the
+bound on $b_x$ as $x$ approaches infinity.
+
+Recall that $b_x$ is the number of $\widehat{c}_i$ which occur before the maximum of the
+$\widehat{T}_\ell$.  However the number of $\widehat{T}_\ell$ depends on the $\widehat{T}_\ell$ and $\widehat{c}_i$
+in a complicated manner.  To simplify the analysis, we instead consider $\star{b}_x$, the number of $\widehat{c}_i$
+less than or equal to the maximum of the precisely $kx^2$ i.i.d $T_{ij}$.  We drop the double index on the $T$ as we no longer
+need to keep track of the customer to which each interval belongs.  
+
+We use the following fact (verifiable with straightforward calculus) without proof.  
+
+\begin{fact}
+    \label{fact}
+    If $k>1$ and $x\in \left[1,\infty\right)$, then
+    \[\left(1-\frac{1}{kx^4}\right)^{kx^2} > 1 - \frac{1}{x}.\]
+\end{fact}
+
+
+We'll need two lemmas:
+\begin{lemma}
+\label{lem:Tmax}
+    \[\lim_{x\rightarrow \infty} \sqrt{x}P\left(\max(T_j)>\sqrt[4]{x}\right)=0.\]
+\end{lemma}
+\begin{proof}
+Note that the maximum is taken over $kx^2$ i.i.d. $T_j$.  For any $T$ with this distribution, recall that $T$ has finite $m$th moment for all $m$, so we have:
+\[\lim_{t\rightarrow \infty} t^mP\left(T>t\right)=0.\]
+
+We need the particular case where $t=\sqrt[4]{x}$ and $m=16$.  Multiplying by the constant $k$, we have:
+
+\[\lim_{t\rightarrow \infty} kx^4P\left(T>\sqrt[4]{x}\right)=0.\]
+
+In particular, for $x$ sufficiently large,
+
+\[kx^4P\left(T>\sqrt[4]{x}\right) < 1.\]
+
+or, suggestively, by Fact~\ref{fact} above:
+
+\[P\left(T>\sqrt[4]{x}\right) < \frac{1}{kx^4}.\]
+
+Applying this to the fact, we shrink $\frac{1}{kx^4}$ to $P\left(T>\sqrt[4]{x}\right)$, increasing the LHS of the inequality, so
+
+\[\left(1-P\left(T>\sqrt[4]{x}\right)\right)^{kx^2} > 1 - \frac{1}{x}.\]
+
+Rearranging, for $x$ \textit{sufficiently large}, we have what we'll eventually need:
+
+\begin{equation}
+    \label{keyineq}
+1-\left(1-P\left(T>\sqrt[4]{x}\right)\right)^{kx^2} < \frac{1}{x}.
+\end{equation}
+
+Because the $T_j$ are independent, we have
+
+\[ P\left(\max(T_j)>\sqrt[4]{x}\right) = 1 - \left(P\left(T_j \le \sqrt[4]{x}\right)\right)^{kx^2}. \]
+
+For simplicity, we drop the subscript and refer to a random variable $T$ with the same distribution as the $T_j$.  Then,
+
+\[\lim_{x\rightarrow \infty} \sqrt{x}P\left(\max(T_j)>\sqrt[4]{x}\right) =\lim_{x\rightarrow \infty}\sqrt{x}\left( 1 -  \left(1 -P\left(T > \sqrt[4]{x}\right)\right)^{kx^2} \right).\]
+
+But by equation \ref{keyineq}, we now have (for $x$ sufficiently large):
+
+\[\lim_{x\rightarrow \infty} \sqrt{x}P\left(\max(T_j)>\sqrt[4]{x}\right) < \lim_{x\rightarrow \infty}\sqrt{x} \cdot \frac{1}{x} =0.\]
+
+as desired. \qed
+\end{proof}
+
+With this result, we no longer need to distinguish the $T_j$, we only care about their maximum, which we denote with the random
+variable $T_{\max}$.
+
+\begin{lemma}
+    \label{lem:pi}
+$\lim_{x\rightarrow \infty} \sqrt{x} \cdot P\left(c_i < T_{\max}\right) = 0$.
+\end{lemma}
+\begin{proof}
+Note that by our assumption that the $c_i$ are uniformly distributed (this is the only place we use this assumption,
+and it is easy to see how we might weaken it), for any $N$,
+\[P\left(c_i < N\right) = \frac{N}{X}.\] 
+We will bound $\sqrt{x} \cdot P\left(c_i < T_{\max}\right)$ above.  Decompose $P\left(c_i < T_{\max}\right)$ conditionally on $T_{\max}$ at the boundary
+$\sqrt[4]{x}$.
+\begin{align}
+P\left(c_i < T_{\max}\right) &= P\left(T_{\max} \le \sqrt[4]{x}\right)\cdot P\left(c_i < T_{\max} \mid T_{\max} \le \sqrt[4]{x}\right) \\
+&\quad + P\left(T_{\max} > \sqrt[4]{x}\right)\cdot P\left(c_i < T_{\max} \mid T_{\max} > \sqrt[4]{x}\right) \\
+&\le  P\left(T_{\max} \le \sqrt[4]{x}\right)\cdot P\left(c_i < \sqrt[4]{x}\right) + P\left(T_{\max} > \sqrt[4]{x}\right) \\
+&= P\left(T_{\max} \le \sqrt[4]{x}\right)\cdot \frac{\sqrt[4]{x}}{x} + P\left(T_{\max} > \sqrt[4]{x}\right) \\
+&\le \frac{\sqrt[4]{x}}{x} + P\left(T_{\max} > \sqrt[4]{x}\right) 
+\end{align}.
+Now, we take the limit as $x$ approaches infinity and apply Lemma~\ref{lem:Tmax}.
+\begin{align}
+\lim_{x\rightarrow \infty} \sqrt{x} \cdot P\left(c_i < T_{\max}\right) &\le \lim_{x\rightarrow \infty} \sqrt{x} 
+\cdot \left(\frac{\sqrt[4]{x}}{x} + P\left(T_{\max} > \sqrt[4]{x}\right)\right) \\
+&= \lim_{x\rightarrow \infty}\frac{1}{\sqrt[4]{x}} + \sqrt{x}P\left(T_{\max} > \sqrt[4]{x}\right) \\
+&= 0
+\end{align}.
+As desired, $\lim_{x\rightarrow \infty} \sqrt{x} \cdot P\left(c_i < T_{\max}\right) = 0$. \qed
+\end{proof}
+
+Finally, we're ready to prove our result. 
+
+\begin{proposition}
+    Suppose $\varphi(x) > o(\sqrt{x})$.  Then 
+    \[\lim_{x\rightarrow \infty } P\left(b_x < \varphi(x)\right) =1.\]
+\end{proposition}
+\begin{proof}
+    Let $\pi(x) = P\left(c_i > T_{\max}\right)$.  Then by Lemma~\ref{lem:pi}, $\lim_{x\rightarrow \infty}\sqrt{x}\pi(x) = 0$.
+    Moreover, note that $b_x$ is the sum of $kx$ independent Bernoulli-distributed variables with $p=\pi(x)$, and so it has distribution 
+    $\text{Binom}(kx,\pi(x))$.  By Markov's inequality:
+    \[P\left(b_x \ge \varphi(x)\right) \le \frac{kx\pi(x)}{\varphi(x)}.\]
+
+    Hence,
+    \[P\left(b_x < \varphi(x)\right) \ge 1 - \frac{kx\pi(x)}{\varphi(x)}.\]
+
+    Finally, taking the limit:
+
+    \begin{align}
+        \lim_{x\rightarrow \infty} P\left(b_x < \varphi(x)\right) &\ge 1 - \lim_{x\rightarrow \infty} \frac{kx\pi(x)}{\varphi(x)} \\
+        &\ge 1 - \lim_{x\rightarrow \infty} k\sqrt{x}\pi(x)\frac{\sqrt{x}}{\varphi(x)}
+    \end{align}.
+    By Lemma~\ref{lem:pi} and because $\varphi(x) > o(\sqrt{x})$, this is equal to $1$. \qed
+\end{proof}
+
+\section{AI Usage}
+AI was used to generate some of the python code which led to the original conjecture upon which this work
+was based.  AI was also used to proofread the document, improve formatting, and find LaTeX bugs.  Beyond this, AI \textit{was not} used
+to generate any of the above arguments or to write the paper.
 \bibliographystyle{plainnat}
-% \bibliography{refs}   % uncomment when you have a refs.bib
+% \bibliography{refs}  
 
 \end{document}

@@ -9,7 +9,6 @@ data/churn.json
 data/eda_verification.png
 models/
 predictions.csv
-survival_curve.png
 .env
 .venv/
 .vscode/

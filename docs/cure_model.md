@@ -2,9 +2,9 @@
 
 Since beginning my statistical work in the world of clinical trials, I've been fascinated by time-to-event analysis, also known as survival analysis, a family of methods used to estimate the distribution of random variables representing the times until some event occurs in situations where data collection hasn't finished or can't finish for some of the subjects.
 
-For example, consider a trial designed to evaluate a new anti-cancer therapy against a competitor which is the current standard of care.  We want to know whether the new therapy increases overall survival - that is, if subjects who take the new drug live longer than those receive the current standard of care.  However, it isn't feasible on the time scale of clinical trials to follow subjects for their whole lives.  Subjects who are still alive at the time of analysis, or who were lost to follow-up, are called *censored*.  We know the last date they were seen, but we don't know how long they may survive past that point.  Computing summary statistics for survival time from only the subjects who have died, or even using the time to censoring, will underestimate overall survival time.  There are a number of good treatments of survival analysis techniques [^tian][^klein] - but what all have in common is an approach to dealing with censoring.
+For example, consider a trial designed to evaluate a new anti-cancer therapy against a competitor which is the current standard of care.  We want to know whether the new therapy increases overall survival - that is, if subjects who take the new drug live longer than those receive the current standard of care.  However, it isn't feasible on the time scale of clinical trials to follow subjects for their whole lives.  Subjects who are still alive at the time of analysis, or who were lost to follow-up, are called *censored*.  We know the last date they were seen, but we don't know how long they may survive past that point.  Computing summary statistics for survival time from only the subjects who have died, or even using the time to censoring, will underestimate overall survival time.  There are a number of good treatments of survival analysis techniques [^tian][^klein].  
 
-There's no reason that mortality should be the eponymous "event" in a time-to-event analysis.  Indeed, although this family of techniques is used heavily in medical, particularly oncology settings, the potential applications in other settings are easy to imagine.
+There's no reason that mortality should be the eponymous "event" in a time-to-event analysis.  Indeed, although this family of techniques is used heavily in medical, particularly oncology, settings, the potential applications in other settings are easy to imagine.
 
 Consider a small restaurant, dependent on returning customers for revenue stability.  Ownership and staff may recognize some regulars, but the overall pattern of repeat visits is hard to see in the day-to-day operations of any business.  We will explore the ways in which approaches from survival analysis can address the questions:
 
@@ -33,9 +33,9 @@ As a first approach, we treat each visit independently and plot a Kaplan-Meier [
 
 ![Kaplan-Meier curve of inter-visit gap times](../notebooks/km_gap_time.png)
 
-It is tempting to imagine that the plateau on this graph answers the question "what proportion of subjects are likely to return" - but it is a red herring.  Over a long period of data collection (in which the vast majority of customers with a time-to-return above some cutoff will never return), this horizontal asymptote is the proportion of "final" visits over the total number of visits.  In other words, it is the reciprocal of the average number of visits per subject.  I've included a proof of this in the attached documents.  
+It is tempting to imagine that the plateau on this graph answers the question "what proportion of subjects are likely to return" - but it is a red herring.  Over a long period of data collection (in which the vast majority of customers with a time-to-return above some cutoff will never return), this horizontal asymptote is the proportion of "final" visits over the total number of visits.  In other words, it is the reciprocal of the average number of visits per subject.  Under mild assumption on the distribution of censoring times, I've proved this [here](km_plateau_proof.pdf).
 
-Note that if the likelihood of "churn" (never returning) was truly independent each visit, the number of visits to churn (average number of visits) would be the inverse of the churn probability.  However, in many business contexts, customers build a relationship with the business and are less likely to churn after many visits.  We need another way to estimate the churn probability.
+Note that if the likelihood of attrition (never returning), also called "churn", was truly independent each visit, the number of visits to attrition (average number of visits) would be the inverse of the churn probability.  However, in many business contexts, customers build a relationship with the business and are less likely to churn after many visits.  We need another way to estimate the churn probability.
 
 
 ## Cure Models: Another Insight from Oncology
@@ -53,7 +53,7 @@ where $\lambda$ and $k$ are parameters influencing the scale and shape of the di
 
 $$S(t) = \pi + (1-\pi)S_w(t ; \lambda,k)$$
 
-Where $\pi$ represents the churn probability.  
+Where $\pi$ represents the attrition probability.  
 
 Since we would also like to determine if any of several covariates affect time to return and likelihood of return, we re-write this model in terms of a covariate matrix $X$, for which visit $i$ has covariate vector $x_i$.
 
@@ -71,7 +71,7 @@ Then we can re-write the model as
 
 $$S(t) = \sigma(X\beta_\pi) + (1-\sigma(X\beta_\pi))S_w(t ; e^{X\beta_\lambda},e^{X\beta_k})$$
 
-We want to estimate the $\beta$'s.  To do so, we use EM-estimation [^neal][^bishop], a machine-learning technique designed for mixture models in which there is a latent variable which can't be measured - in this case, whether a customer has churned or simply hasn't returned yet.  The EM algorithm has two steps.  We begin by assuming reasonable values for the $\beta$ parameters.  Then, conditioning on the data, we compute the probability that each visit represents a churn.  If a customer returned after a particular visit, we know that gap does not represent a churn.  If the customer hasn't yet returned, we compute a probability $\widetilde{\pi}_i$ that the customer has churned.  By Bayes' theorem, this probability is 
+We want to estimate the $\beta$'s.  To do so, we use EM-estimation [^neal][^bishop], a machine-learning technique designed for mixture models in which there is a latent variable which can't be measured - in this case, whether a customer has churned or simply hasn't returned yet.  The EM algorithm has two steps.  We begin by assuming reasonable values for the $\beta$ parameters.  Then, conditioning on the data, we compute the probability that each visit represents an instance of customer attrition.  If a customer returned after a particular visit, we know that gap does not represent attrition.  If the customer hasn't yet returned, we compute a probability $\widetilde{\pi}_i$ that the customer has churned.  By Bayes' theorem, this probability is 
 
 $$\widetilde{\pi}_i = \begin{cases} 0 & \text{if visit } i \text{ is uncensored (customer returned)} \\ \displaystyle\frac{\pi_i}{\pi_i + (1-\pi_i)\,S_w(t_i;\, k_i,\, \lambda_i)} & \text{if visit } i \text{ is censored} \end{cases}$$
 
@@ -91,23 +91,12 @@ The second expression doesn't behave as nicely.  The Weibull log-density and log
 
 After new $\beta$'s are determined, the probabilities $\widetilde{\pi}_i$ are re-computed and the cycle repeats.
 
-## Evaluating the Model
-We determine model convergence using an $L^\infty$ metric on the beta vectors — that is, we iterate until the maximum absolute change in any single beta coefficient falls below a tolerance threshold $(10^{-5})$.
-
-Because we used synthetic data, we can save our latent churn information and directly evaluate the model's estimates.  The model predicts an overall churn rate of 0.317, compared to the true rate of 0.319.  Looking only at $\beta_\pi$, the coefficients of 13 of the 15 covariates with non-negligible effect on churn show a contribution in the same direction as the contribution actually underlying the synthetic data.
-
-For the time-to-return component, the model estimates a Weibull shape parameter $k \approx 1.43$ (true value 1.5) and predicts a mean return time of 18.6 days compared to the observed mean of 18.5 days among uncensored gaps.  The covariate effects on the Weibull parameters are small, with the model placing almost all weight on the intercept.  This validates other approaches [^farewell] which don't assume covariate effects on the Weibull parameters.
+We determine model convergence using an $L^\infty$ metric on the beta vectors — that is, we iterate until the maximum absolute change in any single beta coefficient falls below a tolerance threshold $(10^{-5})$.  This threshhold is arbitrary, but was the smallest order of magnitude for which the EM algorithm coverged consistently in $<5$ minutes.
 
 ## Further Directions
-One question a restaurant might reasonably ask is: are any dishes associated with an increased or decreased likelihood to churn?  In our current approach, we have embedded tickets by the proportion of each course (appetizer, entree, dessert) ordered by a particular party.
+One question a restaurant might reasonably ask is: are any dishes associated with an increased or decreased likelihood of attrition?  In our current approach, we have embedded tickets by the proportion of each course (appetizer, entree, dessert) ordered by a particular party.
 
-A more sophisticated approach would be to perform SVD to extract principal components from each party's orders.  Consider the bipartite graph with dishes on one side and visits on the other, where edges connect a visit to each dish ordered (with multiplicity for repeated items).  Let $M$ be the visits-by-dishes matrix encoding this graph.  Then $M^T M$ counts the number of length-2 paths between each pair of dishes; that is, the number of visits at which both dishes were ordered.  This is the adjacency matrix of the projected dish-dish graph.  A fully connected component in this graph (a set of dishes that always appear together) corresponds to an eigenvector of $M^T M$ with large eigenvalue.  In real data, where groupings of dishes are approximate and the largest eigenvectors of $M^T M$ approximate the indicators of these dish clusters.  By projecting each visit's order into this lower-dimensional space, we could test whether particular dish clusters are associated with higher or lower churn.
-
-The graph below shows behavior in the synthetic data that I didn't anticipate:
-
-![Visits per Week](../notebooks/churn_equilibrium.png)
-
-The image suggests that as the customer base increased, the relatively stable churn percentage led to increased churn, which led to an equilibrium between new customer acquisition and churn being reached.  This suggests that number of covers, an easy data point for most restaurants to provide, could be used to estimate churn rate despite not providing customer-level data.
+A more sophisticated approach would be to perform SVD to extract principal components from each party's orders.  Consider the bipartite graph with dishes on one side and visits on the other, where edges connect a visit to each dish ordered (with multiplicity for repeated items).  Let $M$ be the visits-by-dishes matrix encoding this graph.  Then $M^T M$ counts the number of length-2 paths between each pair of dishes; that is, the number of visits at which both dishes were ordered.  This is the adjacency matrix of a graph showing the frequency with which dishes are ordered together.  If this graph were disconnected, a fully connected component in this graph (a set of dishes that always appear together) would correspond to a family of eigenvectors of $M^T M$.  In real data connected components are unlikely and groupings of dishes are approximate, but the largest members of the spectrum of $M^T M$ still indicate clusters of dishes.  By projecting each visit's order into a lower dimensional space spanned by these principal components, we could test whether particular dish clusters are associated with higher or lower attrition.
 
 ---
 

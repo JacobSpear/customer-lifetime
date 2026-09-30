@@ -136,8 +136,8 @@ BETA_ADJ = {
     ("special_offer", None):                         (0.0, 1, 1,  0.0, 1, 1),
     ("special_offer", "Birthday"):                   (0.1, 1, 1,  1.0, 1, 2),
     ("special_offer", "Anniversary"):                (0.1, 1, 1,  1.2, 1, 3),
-    ("special_offer", "Valentines Day"):             (0.8, 1, 2,  0.2, 1, 1),   # high churn (forced occasion)
-    ("special_offer", "New Years"):                  (0.7, 1, 2,  0.2, 1, 1),   # high churn (forced occasion)
+    ("special_offer", "Valentines Day"):             (12, 1, 2,  0.2, 1, 1),   # high churn (forced occasion)
+    ("special_offer", "New Years"):                  (5, 1, 2,  0.2, 1, 1),   # high churn (forced occasion)
 
     # Discounts: comps → retention; complaints → churn
     ("discount", None):                              (0.0, 1, 1,  0.0, 1, 1),
@@ -160,9 +160,9 @@ BETA_ADJ = {
     ("dish", "Humba"):             (IMPORTANCE['entree']*1.2, 1, 4, IMPORTANCE['entree']*0.1, 1, 1), # weak entree → churn
     ("dish", "Kaldereta"):         (IMPORTANCE['entree']*0.3, 1, 1, IMPORTANCE['entree']*0.6, 1, 2), # mild retention
 
-    ("dish", "Fruit Salad"):       (IMPORTANCE['dessert']*1.0, 1, 3, IMPORTANCE['dessert']*0.1, 1, 1), # weak dessert → churn
-    ("dish", "Sapin Sapin"):       (IMPORTANCE['dessert']*0.3, 1, 1, IMPORTANCE['dessert']*0.5, 1, 2), # mild retention
-    ("dish", "Tamarind Sorbet"):   (IMPORTANCE['dessert']*0.1, 1, 1, IMPORTANCE['dessert']*1.3, 1, 4), # star dessert → retention
+    ("dish", "Fruit Salad"):       (IMPORTANCE['dessert']*1.0, 1, 3, IMPORTANCE['dessert']*4, 1, 1), # weak dessert → churn
+    ("dish", "Sapin Sapin"):       (IMPORTANCE['dessert']*0.3, 1, 1, IMPORTANCE['dessert']*4, 1, 2), # mild retention
+    ("dish", "Tamarind Sorbet"):   (IMPORTANCE['dessert']*0.1, 1, 1, IMPORTANCE['dessert']*6, 1, 4), # star dessert → retention
 }
 
 # ─────────────────────────────────────────────────────────────────────
@@ -315,7 +315,7 @@ def generate_data(db_path, seed=42):
             else:
                 churn_frac = b_prev / (a_prev + b_prev)
                 a_prior = 1.0
-                b_prior = 1.0 + (visit_idx - 1) * churn_frac
+                b_prior = 1.0 + (visit_idx - 1)**2 * churn_frac
 
 
 

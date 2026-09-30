@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from pandas.core.groupby.generic import DataFrameGroupBy
-import torch as T
 import json
 import sqlite3
 import scipy.stats as stats

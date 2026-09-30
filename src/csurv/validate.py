@@ -90,7 +90,14 @@ def churn_summary(db_path: str = "data/demo.db",
             grp.columns = ["churn_rate", "n"]
             print(grp.sort_values("churn_rate"))
             print()
-
+    df2 = df.copy()
+    df2['gap_num'] = df2['gap_num']*mean_sd['gap_num'][1]+mean_sd['gap_num'][0]
+    truth_by_visit = df2.groupby('gap_num')['churned'].agg(['mean', 'count'])
+    pred_by_visit = df2.groupby('gap_num')['pi_pred'].agg(['mean', 'count'])
+    truth_by_visit.columns = ['churn_rate_true', 'n']
+    pred_by_visit.columns = ['churn_rate_predicted', 'n']
+    by_visit = pd.merge(truth_by_visit,pred_by_visit,on='n')
+    print(by_visit.head(10))
 
 if __name__ == "__main__":
     churn_summary()

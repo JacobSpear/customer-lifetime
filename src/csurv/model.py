@@ -132,7 +132,7 @@ def EMCure_Learn(dbpath : str ="data/demo.db",
     
     if len(covariates)==0:
         exclude = ['time', 'event', 'customer_id', 'visit_id', 'visit_date',
-           'first_visit_date', 'gap_num', 'days_since_first_visit','entree','avg_gap_days','prev_gap_days','VIP_None']
+           'first_visit_date', 'days_since_first_visit','entree','avg_gap_days','prev_gap_days','VIP_None']
         covariates = [c for c in df.columns if c not in exclude 
                     and pd.api.types.is_numeric_dtype(df[c])]
     
