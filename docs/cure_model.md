@@ -43,11 +43,11 @@ The plateau suggests that another insight from oncology could be useful. Because
 
 The Weibull distribution has cumulative distribution function
 
-$$F(t; k, \lambda) = 1 - \exp\!\left(-\left(\frac{t}{\lambda}\right)^{k}\right)$$
+$$F(t; k, \lambda) = 1 - \exp\left(-\left(\frac{t}{\lambda}\right)^{k}\right)$$
 
 so it has survival function
 
-$$S_w(t; k, \lambda) = \exp\!\left(-\left(\frac{t}{\lambda}\right)^{k}\right)$$
+$$S_w(t; k, \lambda) = \exp\left(-\left(\frac{t}{\lambda}\right)^{k}\right)$$
 
 where $\lambda$ and $k$ are parameters influencing the scale and shape of the distribution respectively.  Then, we represent the survival function (the complement of the CDF of return probability) as 
 
@@ -83,7 +83,7 @@ where $\delta_i = 1$ if visit $i$ is uncensored and $0$ otherwise.  Since the fi
 
 To optimize $\beta_\pi$, some rearranging gives that its gradient with respect to $\beta_\pi$ is
 
-$$\nabla_{\beta_\pi} LL_\pi = X^T\!\left(\widetilde{\pi} - \sigma(X\beta_\pi)\right)$$
+$$\nabla_{\beta_\pi} LL_\pi = X^T\left(\widetilde{\pi} - \sigma(X\beta_\pi)\right)$$
 
 which is just the standard logistic regression gradient with $\widetilde{\pi}$ in place of binary classification.  Differentiating again, we see this function is concave in $\beta_\pi$, setting this gradient to zero yields a unique global maximum, which we find via L-BFGS-B [^nocedal].
 
