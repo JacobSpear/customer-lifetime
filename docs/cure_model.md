@@ -87,7 +87,7 @@ $$\nabla_{\beta_\pi} LL_\pi = X^T\left(\widetilde{\pi} - \sigma(X\beta_\pi)\righ
 
 which is just the standard logistic regression gradient with $\widetilde{\pi}$ in place of binary classification.  Differentiating again, we see this function is concave in $\beta_\pi$, setting this gradient to zero yields a unique global maximum, which we find via L-BFGS-B [^nocedal].
 
-The second expression doesn't behave as nicely.  The Weibull log-density and log-survival are non-convex functions of $\beta_k$ and $\beta_\lambda$, so we optimize $Q_w$ numerically using L-BFGS-B [^nocedal] with finite-difference gradients.
+The second expression doesn't behave as nicely - we optimize the second part of the log-likelihood numerically using L-BFGS-B [^nocedal].
 
 After new $\beta$'s are determined, the probabilities $\widetilde{\pi}_i$ are re-computed and the cycle repeats.
 
