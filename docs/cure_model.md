@@ -1,27 +1,27 @@
 # An Application of Time to Event Analysis to Customer Return Visits
 
-Since beginning my statistical work in the world of clinical trials, I've been fascinated by time-to-event analysis, also known as survival analysis, a family of methods used to estimate the distribution of random variables representing the times until some event occurs in situations where data collection hasn't finished or can't finish for some of the subjects.
+Since beginning my work in the world of clinical trials, I've been fascinated by time-to-event analysis, also known as survival analysis, a family of methods used to estimate the distribution of random variables representing the times until some event occurs in situations where data collection hasn't finished or can't finish for some of the subjects.
 
-For example, consider a trial designed to evaluate a new anti-cancer therapy against a competitor which is the current standard of care.  We want to know whether the new therapy increases overall survival - that is, if subjects who take the new drug live longer than those receive the current standard of care.  However, it isn't feasible on the time scale of clinical trials to follow subjects for their whole lives.  Subjects who are still alive at the time of analysis, or who were lost to follow-up, are called *censored*.  We know the last date they were seen, but we don't know how long they may survive past that point.  Computing summary statistics for survival time from only the subjects who have died, or even using the time to censoring, will underestimate overall survival time.  There are a number of good treatments of survival analysis techniques [^tian][^klein].  
+For example, consider a trial designed to evaluate a new anti-cancer therapy against a competitor which is the current standard of care.  We want to know whether the new therapy increases overall survival - that is, if subjects who take the new drug live longer than those receive the current standard of care.  However, it isn't feasible on the time scale of clinical trials to follow subjects for their whole lives.  Subjects who are still alive at the time of analysis, or who were lost to follow-up, are called *censored*.  We know the last date they were seen, but we don't know how long they may survive past that point.  Computing summary statistics for survival time from only the subjects who have died, or even using the time to censoring as a proxy for survival time, will underestimate overall survival time.  For interested readers, there are a number of good treatments of survival analysis techniques [^tian][^klein], and the original paper by Kaplan and Meier [^km] is also well worth reading.  
 
 There's no reason that mortality should be the eponymous "event" in a time-to-event analysis.  Indeed, although this family of techniques is used heavily in medical, particularly oncology, settings, the potential applications in other settings are easy to imagine.
 
-Consider a small restaurant, dependent on returning customers for revenue stability.  Ownership and staff may recognize some regulars, but the overall pattern of repeat visits is hard to see in the day-to-day operations of any business.  We will explore the ways in which approaches from survival analysis can address the questions:
+Consider, appropriately for this project, a small restaurant, dependent on returning customers for revenue stability.  Ownership and staff may recognize some regulars, but the overall pattern of repeat visits is hard to see in the day-to-day operations of any business, especially a fast-paced restaurant.  We will explore the ways in which approaches from survival analysis can address the questions:
 
 1) How long do customers typically wait to return?
 2) How likely is a customer to return after a given visit?
 3) How do customer traits (like VIP status or method of acquisition) or visit traits (like the specific dishes ordered) impact probability of return and expected time to return?
-4) What can the restaurant do to increase likelihood of return and decrease time to return?
+4) What should the restaurant do to increase likelihood of return and decrease time to return?
 
-There are some common features between the food and beverage example and the oncology example
+There are some common features between the restaurant example and the oncology example:
 - We are interested in estimating the time until an event
 - We are interested in determining the proportion of subjects for whom an event may never happen (or may never happen on the time scales we are considering)
-- The data are censored: if a customer hasn't returned since their last visit, we don't know if they will return.  The time since their last visit is information we need to use in computing time to return, but we can't use it in a naive average.
+- The data are censored: if a customer hasn't returned since their last visit, we don't know if they will return.  The time since their last visit is information we need to use in computing time to return, but we can't use it in a naive average. 
 
-However, there are also key differences, principal among them that the restaurant example (and almost any example in business) involves repeated visits.  There are myriad techniques for handling repeated visits in the medical context.  
+However, there are also key differences, principal among them that the restaurant example (and almost any example in business) involves repeated visits.  Also - a small wrinkle that will be relevant later: *all* customers "haven't returned since their last visit", so there is a censored record *for each* customer.  There are myriad techniques for handling repeated visits in the medical context.  
 ## Simulating Data - Including Limitations
 
-In order to explore these questions, we need a dataset.  We use synthetic data here, principally to avoid the complication that in real restaurant data, customers may not always be "tracked" - we don't always know to which customer a particular visit corresponds. Moreover, especially among regular customers who visit together, visits are typically associated with at most one member of each party.  Therefore, if two guests occasionally attend together, one may falsely appear to have long gaps in visits during which the visit was credited to the other guest.  This issue is surmountable - like anything, these "missing" visits can be modeled.  But this complication is beyond the scope of our analysis.
+In order to explore the above questions, we need a dataset.  We use synthetic data here, principally to avoid the complication that, in real restaurant data, customers may not always be "tracked" - we don't always know to which customer a particular visit corresponds. Moreover, especially among regular customers who visit together, visits are typically associated with at most one member of each party.  Therefore, if two guests attend together, one may falsely appear to have long gaps in visits during which the visit was credited to another guest.  This issue is surmountable - as in the case of other types of missing data or latent variables, these "missing" visits can be estimated (for instance, with a resampling approach), but such imputation is beyond the scope of our analysis.
 
 The data we use were generated by simulating customer behavior on an individual basis.  On each day, several new customers attend the restaurant.  They are randomly assigned characteristics, they choose to order particular dishes from an underlying discrete distribution, and each of the features of the guest and their visit is associated with adjustments to 1) The probability the guest returns at all and 2) Their time to return.
 
@@ -35,21 +35,21 @@ As a first approach, we treat each visit independently and plot a Kaplan-Meier [
 
 It is tempting to imagine that the plateau on this graph answers the question "what proportion of subjects are likely to return" - but it is a red herring.  Over a long period of data collection (in which the vast majority of customers with a time-to-return above some cutoff will never return), this horizontal asymptote is the proportion of "final" visits over the total number of visits.  In other words, it is the reciprocal of the average number of visits per subject.  Under mild assumption on the distribution of censoring times, I've proved this [here](km_plateau_proof.pdf).
 
-Note that if the likelihood of attrition (never returning), also called "churn", was truly independent each visit, the number of visits to attrition (average number of visits) would be the inverse of the churn probability.  However, in many business contexts, customers build a relationship with the business and are less likely to churn after many visits.  We need another way to estimate the churn probability.
+Note that if the likelihood of attrition (never returning), also called "churn", was truly independent each visit, the number of visits to attrition (average number of visits) would be the inverse of the churn probability.  However, in many business contexts, customers build a relationship with the business and are less likely to churn after many visits.  We need another a way to estimate the likelihood of attrition/churn that can handle this change in attrition visit-to-visit.
 
 
 ## Cure Models: Another Insight from Oncology
-The plateau suggests that another insight from oncology could be useful. Because overall survival can be hard to estimate, oncology trials typically also report *progression-free survival* or *recurrence-free survival*.  Thinking of "returning to the restaurant" along the same lines as a recurrence of disease, the customers who will never return are analogous to subjects who are permanently cured.  In response to the poor interpretability of the plateau in the KM graph in these cases, an alternate approach involves using a *mixture cure* model [^amico][^peng], which represents the probability of non-return by time t as a sum of a churn (cure) probability and a parametric time-to-event estimate drawn from a Weibull distribution (which allows us to model the notion that the mode of time to return is likely neither very large nor close to 0).
+We make another analogy to the oncology context.  Because overall survival can be hard to estimate, oncology trials typically also report *progression-free survival* or *recurrence-free survival*.  Thinking of "returning to the restaurant" along the same lines as a recurrence of disease, the customers who will never return are analogous to subjects who are permanently cured.  In response to the suspect interpretability of the plateau in the KM graph in the case where a fraction of subjects are cured, an alternate approach involves using a *mixture cure* model [^amico][^peng], which represents the probability of non-return by time t as a sum of a churn (cure) probability and a parametric time-to-event estimate drawn from a Weibull distribution (which allows us to model the notion that the mode of time to return is likely neither very large nor close to 0).
 
 The Weibull distribution has cumulative distribution function
 
-$$F(t; k, \lambda) = 1 - \exp\left(-\left(\frac{t}{\lambda}\right)^{k}\right)$$
+$$F(t; k, \lambda) = 1 - e^{-\left(\frac{t}{\lambda}\right)^{k}}$$
 
 so it has survival function
 
-$$S_w(t; k, \lambda) = \exp\left(-\left(\frac{t}{\lambda}\right)^{k}\right)$$
+$$S_w(t; k, \lambda) = e^{-\left(\frac{t}{\lambda}\right)^{k}}$$
 
-where $\lambda$ and $k$ are parameters influencing the scale and shape of the distribution respectively.  Then, we represent the survival function (the complement of the CDF of return probability) as 
+where $\lambda$ scales the distribution (the mean is proportional to $\lambda$) and $k$ influences the shape of the distribution. $k$ is harder to interpret than $\lambda$ - the mean is proportional to $\Gamma(k+1)$ - but, roughly speaking, a larger value of $k$ indicates that guests wait a bit before returning - it increases the mode of the distribution.  Then, we represent the survival function (the complement of the CDF of return probability) as 
 
 $$S(t) = \pi + (1-\pi)S_w(t ; \lambda,k)$$
 
@@ -65,38 +65,34 @@ We model $\pi_i$, $\lambda_i$, and $k_i$ as determined by a linear map of the co
 $$\pi = \sigma(X\beta_\pi)$$
 $$\lambda = e^{X\beta_\lambda}$$
 $$k = e^{X\beta_k}$$
-where $\sigma$ is the sigmoid function, and these non-linear functions are applied element-wise to their vector inputs.
+where $\sigma$ is the sigmoid function, and both $\sigma$ and $\exp$ are applied element-wise to their vector inputs.
 
 Then we can re-write the model as 
 
 $$S(t) = \sigma(X\beta_\pi) + (1-\sigma(X\beta_\pi))S_w(t ; e^{X\beta_\lambda},e^{X\beta_k})$$
 
-We want to estimate the $\beta$'s.  To do so, we use EM-estimation [^neal][^bishop], a machine-learning technique designed for mixture models in which there is a latent variable which can't be measured - in this case, whether a customer has churned or simply hasn't returned yet.  The EM algorithm has two steps.  We begin by assuming reasonable values for the $\beta$ parameters.  Then, conditioning on the data, we compute the probability that each visit represents an instance of customer attrition.  If a customer returned after a particular visit, we know that gap does not represent attrition.  If the customer hasn't yet returned, we compute a probability $\widetilde{\pi}_i$ that the customer has churned.  By Bayes' theorem, this probability is 
+We want to estimate the $\beta$'s.  To do so, we use EM-estimation [^neal][^bishop], a machine-learning technique designed for mixture models in which there is a latent variable which can't be measured - in this case, whether a customer has churned or simply hasn't returned yet.  The EM algorithm has two steps.  We begin by assuming reasonable values for the $\beta$ parameters (we draw them at random from uniform distributions centered at 0).  Then, conditioning on the data, we compute the probability that each visit represents an instance of customer attrition.  If a customer returned after a particular visit, we know that gap does not represent attrition.  If the customer hasn't yet returned, we compute a probability $\widetilde{\pi}_i$ that the customer has churned.  By Bayes' theorem, this probability is 
 
-$$\widetilde{\pi}_i = \begin{cases} 0 & \text{if visit } i \text{ is uncensored (customer returned)} \\ \displaystyle\frac{\pi_i}{\pi_i + (1-\pi_i)\,S_w(t_i;\, k_i,\, \lambda_i)} & \text{if visit } i \text{ is censored} \end{cases}$$
+$$\widetilde{\pi}_i = \begin{cases} 0 & \text{if visit } i \text{ is uncensored (customer returned)} \\\\ \displaystyle\frac{\pi_i}{\pi_i + (1-\pi_i)\,S_w(t_i;\, k_i,\, \lambda_i)} & \text{if visit } i \text{ is censored} \end{cases}$$
 
 In the second step, the M-step, we compute the log-likelihood of the data given the probabilities $\widetilde{\pi}_i$ that each visit represents churn.  Some rearranging gives us 
 
-$$LL = \underbrace{\sum_i \widetilde{\pi}_i \log \sigma(x_i \beta_\pi) + (1 - \widetilde{\pi}_i) \log \sigma(-x_i \beta_\pi)}_{\text{Contribution from }\beta_\pi} \\ + \underbrace{\sum_i (1 - \widetilde{\pi}_i)\left[\delta_i \log f_w(t_i;\, k_i,\, \lambda_i) + (1-\delta_i) \log S_w(t_i;\, k_i,\, \lambda_i)\right]}_{\text{Contribution from }\beta_k\text{ and }\beta_\lambda}$$
+$$\text{LL}=\text{LL}_\pi+\text{LL}_{k,\lambda} \\\\ = \underbrace{\sum_i \widetilde{\pi}_i \log \sigma(x_i \beta_\pi) + (1 - \widetilde{\pi}_i) \log \sigma(-x_i \beta_\pi)}_{\text{LL}_{\pi}=\text{Contribution from }\beta_\pi} \\ + \underbrace{\sum_i (1 - \widetilde{\pi}_i)\left[\delta_i \log f_w(t_i;\, k_i,\, \lambda_i) + (1-\delta_i) \log S_w(t_i;\, k_i,\, \lambda_i)\right]}_{\text{LL}_{k,\lambda}=\text{Contribution from }\beta_k\text{ and }\beta_\lambda}$$
 
 where $\delta_i = 1$ if visit $i$ is uncensored and $0$ otherwise.  Since the first term depends only on $\beta_\pi$ and the second depends only on $\beta_k$ and $\beta_\lambda$, we can optimize them separately. 
 
 To optimize $\beta_\pi$, some rearranging gives that its gradient with respect to $\beta_\pi$ is
 
-$$\nabla_{\beta_\pi} LL_\pi = X^T\left(\widetilde{\pi} - \sigma(X\beta_\pi)\right)$$
+$$\nabla_{\beta_\pi} LL_\pi = X^T\left(\widetilde{\pi} - \sigma(X\beta_\pi)\right).$$
 
-which is just the standard logistic regression gradient with $\widetilde{\pi}$ in place of binary classification.  Differentiating again, we see this function is concave in $\beta_\pi$, setting this gradient to zero yields a unique global maximum, which we find via L-BFGS-B [^nocedal].
+Computing the gradient directly allows us to speed-up optimization by L-BFGS-B [^nocedal].
 
-The second expression doesn't behave as nicely - we optimize the second part of the log-likelihood numerically using L-BFGS-B [^nocedal].
+The second expression doesn't behave as nicely - we optimize the second part of the log-likelihood numerically using L-BFGS-B, estimating the gradient as well, leading to slower convergence [^nocedal].
 
 After new $\beta$'s are determined, the probabilities $\widetilde{\pi}_i$ are re-computed and the cycle repeats.
 
 We determine model convergence using an $L^\infty$ metric on the beta vectors — that is, we iterate until the maximum absolute change in any single beta coefficient falls below a tolerance threshold $(10^{-5})$.  This threshhold is arbitrary, but was the smallest order of magnitude for which the EM algorithm coverged consistently in $<5$ minutes.
 
-## Further Directions
-One question a restaurant might reasonably ask is: are any dishes associated with an increased or decreased likelihood of attrition?  In our current approach, we have embedded tickets by the proportion of each course (appetizer, entree, dessert) ordered by a particular party.
-
-A more sophisticated approach would be to perform SVD to extract principal components from each party's orders.  Consider the bipartite graph with dishes on one side and visits on the other, where edges connect a visit to each dish ordered (with multiplicity for repeated items).  Let $M$ be the visits-by-dishes matrix encoding this graph.  Then $M^T M$ counts the number of length-2 paths between each pair of dishes; that is, the number of visits at which both dishes were ordered.  This is the adjacency matrix of a graph showing the frequency with which dishes are ordered together.  If this graph were disconnected, a fully connected component in this graph (a set of dishes that always appear together) would correspond to a family of eigenvectors of $M^T M$.  In real data connected components are unlikely and groupings of dishes are approximate, but the largest members of the spectrum of $M^T M$ still indicate clusters of dishes.  By projecting each visit's order into a lower dimensional space spanned by these principal components, we could test whether particular dish clusters are associated with higher or lower attrition.
 
 ---
 
