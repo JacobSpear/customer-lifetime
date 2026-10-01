@@ -181,9 +181,9 @@ $\varphi(x)/x$ approaches $0$ in the limit.  Assuming that $\varphi$ exists, we 
     Therefore:
 
     \begin{align}
-        \lim_{x\rightarrow \infty}S_x\frac{V_c}{V_x} &\leq \lim_{x\rightarrow \infty} \frac{V_c-b_x-1}{V_x-b_x} \cdot \frac{V_c}{V_x} \\
-        &\leq \lim_{x\rightarrow \infty}\frac{V_c-b_x-1}{V_c} \\
-        &\leq \lim_{x\rightarrow \infty}\frac{V_c-\varphi(x)-1}{V_c} \\
+        \lim_{x\rightarrow \infty}S_x\frac{V_x}{V_c} &\leq \lim_{x\rightarrow \infty} \frac{V_c-b_x-1}{V_x-b_x} \cdot \frac{V_c}{V_x} \\
+        &\geq \lim_{x\rightarrow \infty}\frac{V_c-b_x-1}{V_c} \\
+        &\geq \lim_{x\rightarrow \infty}\frac{V_c-\varphi(x)-1}{V_c} \\
         &= \lim_{x\rightarrow \infty}\frac{kx-\varphi(x)-1}{kx} \\
         &= \lim_{x\rightarrow \infty} 1 - \frac{-\varphi(x)}{kx} = 1
     \end{align}
@@ -294,7 +294,7 @@ Finally, we're ready to prove our result.
     \[\lim_{x\rightarrow \infty } P\left(b_x < \varphi(x)\right) =1.\]
 \end{proposition}
 \begin{proof}
-    Let $\pi(x) = P\left(c_i > T_{\max}\right)$.  Then by Lemma~\ref{lem:pi}, $\lim_{x\rightarrow \infty}\sqrt{x}\pi(x) = 0$.
+    Let $\pi(x) = P\left(c_i < T_{\max}\right)$.  Then by Lemma~\ref{lem:pi}, $\lim_{x\rightarrow \infty}\sqrt{x}\pi(x) = 0$.
     Moreover, note that $b_x$ is the sum of $kx$ independent Bernoulli-distributed variables with $p=\pi(x)$, and so it has distribution 
     $\text{Binom}(kx,\pi(x))$.  By Markov's inequality:
     \[P\left(b_x \ge \varphi(x)\right) \le \frac{kx\pi(x)}{\varphi(x)}.\]
