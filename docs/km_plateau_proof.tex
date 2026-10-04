@@ -77,8 +77,7 @@ We want to model the following scenario.  A restaurant tracks its customers' pat
 Data collection begins on day $d=1$.  On each day between day $1$ and day $x$, the final day of data collection,
 some constant number, $k$, of new customers discover the restaurant and make their first visit.  Thus, on day $x$,
 $kx$ customers in total have visited the restaurant.  To determine time to return, we will make independent and 
-identically distributed draws from some probability distribution on the \textbf{positive} integers with finite moments
-(although we will only need finite fourth moment).  It will be convenient for the number of these draws to be deterministic, depending only on $x$ and not on the results
+identically distributed draws from some probability distribution on the \textbf{positive} integers with finite moments.  It will be convenient for the number of these draws to be deterministic, depending only on $x$ and not on the results
 of these draws.  For each customer $i$, we make one draw $T_{ij}$ for each positive integer $j$, representing the time 
 to return \textit{if the customer visits on day $j$}.  
 
@@ -148,8 +147,8 @@ Our main result is:
 \begin{theorem}
     With $\widehat{c}_i$ uniformly distributed in $\left[0,x\right]$, $\widehat{T}_{\ell}$ i.i.d. as above,
     and $\tau_i$ defined as above, let $V_x=V_e + V_c$, where $V_e$ is the number of $\widehat{T}_{\ell}$ and $V_c$
-    the number of $\widehat{c}_i$.  Then, with probability $1$,
-\[\lim_{x\rightarrow \infty} S_x \cdot \frac{V_x}{V_c} =1.\]
+    the number of $\widehat{c}_i$.  Then 
+\[\lim_{x\rightarrow \infty} S_x \cdot \frac{V_x}{V_c} \] converges in probability to $1$.
 \end{theorem}
 
 \section{Bounds for the asymptote of the KM estimator}
@@ -160,15 +159,15 @@ Note that $S_x \le \frac{V_c}{V_x}$, because if all events occur before all cens
 
 and that any other value of $S_x$ would replace some of the terms of this product with smaller values.
 
-Thus, we wish to find a lower bound for $S_x$ with probability $1$ and which converges
-to $\frac{V_c}{V_x}$ in the limit (i.e., the quotient of the two converges to $1$ in the limit).  
+Thus, we wish to find an asyptototic lower bound for $S_x$ (in probability) which converges
+to $\frac{V_c}{V_x}$ in the limit (i.e., the quotient of the two converges to $1$ in probability).  
 Note that by our assumptions of how the customers originate ($k$ per day), we have
 $V_c=kx$ and we have $V_x < kx^2$.
 
 We will argue that relatively few of the censored times occur before the final uncensored time.  
 Let $b_x$ be the number of such censored times.
 
-We will construct a function $\varphi(x)$ such that $b_x < \varphi(x)$ with probability $1$ and such that
+We will construct a function $\varphi(x)$ such that $\lim_{x\rightarrow \infty}P(b_x < \varphi(x))=1$  and such that
 $\varphi(x)/x$ approaches $0$ in the limit.  Assuming that $\varphi$ exists, we can prove the theorem:
 
 \begin{proof}
@@ -181,11 +180,17 @@ $\varphi(x)/x$ approaches $0$ in the limit.  Assuming that $\varphi$ exists, we 
     Therefore:
 
     \begin{align}
-        \lim_{x\rightarrow \infty}S_x\frac{V_x}{V_c} &\leq \lim_{x\rightarrow \infty} \frac{V_c-b_x-1}{V_x-b_x} \cdot \frac{V_c}{V_x} \\
-        &\geq \lim_{x\rightarrow \infty}\frac{V_c-b_x-1}{V_c} \\
-        &\geq \lim_{x\rightarrow \infty}\frac{V_c-\varphi(x)-1}{V_c} \\
-        &= \lim_{x\rightarrow \infty}\frac{kx-\varphi(x)-1}{kx} \\
-        &= \lim_{x\rightarrow \infty} 1 - \frac{-\varphi(x)}{kx} = 1
+        \lim_{x\rightarrow \infty}S_x\frac{V_x}{V_c} &\geq \lim_{x\rightarrow \infty} \frac{V_c-b_x-1}{V_x-b_x} \cdot \frac{V_c}{V_x} \\
+        &\geq \lim_{x\rightarrow \infty}\frac{V_c-b_x-1}{V_c} 
+    \end{align}
+
+    Considering probabilities,
+    \begin{align}    
+        \lim_{x\rightarrow \infty}P\left(S_x\frac{V_x}{V_c}<1\right) &\leq  \lim_{x\rightarrow \infty}P\left(\frac{V_c-b_x-1}{V_c}<1\right) \\
+        &\leq \lim_{x\rightarrow \infty}P(b_x < \varphi(x))\cdot P\left(\frac{V_c-\varphi(x)-1}{V_c}<1\right) +  \lim_{x\rightarrow \infty}P(b_x > \varphi(x)) \\
+        &\leq \lim_{x\rightarrow \infty}P\left(\frac{V_c-\varphi(x)-1}{V_c}<1\right) \\
+        &= \lim_{x\rightarrow \infty}P\left(\frac{kx-\varphi(x)-1}{kx}<1\right)  \\
+        &= \lim_{x\rightarrow \infty} P\left(\frac{\varphi(x)}{kx}>0\right)= 0
     \end{align}
     as desired. \qed
 \end{proof}
@@ -295,7 +300,7 @@ Finally, we're ready to prove our result.
 \end{proposition}
 \begin{proof}
     Let $\pi(x) = P\left(c_i < T_{\max}\right)$.  Then by Lemma~\ref{lem:pi}, $\lim_{x\rightarrow \infty}\sqrt{x}\pi(x) = 0$.
-    Moreover, note that $b_x$ is the sum of $kx$ independent Bernoulli-distributed variables with $p=\pi(x)$, and so it has distribution 
+    Moreover, note that $b_x$ is the sum of $kx$ Bernoulli-distributed variables with $p=\pi(x)$, and so it has distribution 
     $\text{Binom}(kx,\pi(x))$.  By Markov's inequality:
     \[P\left(b_x \ge \varphi(x)\right) \le \frac{kx\pi(x)}{\varphi(x)}.\]
 
@@ -313,7 +318,9 @@ Finally, we're ready to prove our result.
 
 \section{AI Usage}
 AI was used to generate some of the python code which led to the original conjecture upon which this work
-was based.  AI was also used to proofread the document, improve formatting, and find LaTeX bugs.  Beyond this, AI \textit{was not} used
+was based.  AI was also used to proofread the document, improve formatting, and find LaTeX bugs.  Several mis-statements and imprecisions were identified by AI 
+but corrected independently by the author (at one point, I implied almost-sure convergence when I meant convergence in probability.  
+I mistakenly reversed several inequality signs.)  Beyond this, AI \textit{was not} used
 to generate any of the above arguments or to write the paper.
 \bibliographystyle{plainnat}
 % \bibliography{refs}  
