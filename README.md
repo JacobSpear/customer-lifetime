@@ -27,7 +27,7 @@ At each visit, customers' likelihood to churn remembers (partially) their likeli
 
 The generated data look plausible on first glance.  In particular the time between visits does look Weibull-shaped.  One issue, which could be improved by tuning the parameters in data generation, is that the weekly visit volume doesn't stabilize over the course of data collection, and that it doesn't exhibit obvious seasonal variation.
 
-![EDA](data/eda_verification.png)
+![EDA](notebooks/eda_verification.png)
 
 ## The Model
 The model we implement is [discussed further in the mathematical writeup](docs/cure_model.md).  In brief summary, we use a parametric mixture-cure model.  The advantage of a parametric model is that it gives us parameters we can train.  Using a Weibull distribution gives us a flexible hazard ratio, so we can account for a wide variety of return dynamics.
